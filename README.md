@@ -1,4 +1,6 @@
 rillit
 ======
 
-Functional lenses for Scala
+Functional lenses for Scala.
+
+TBD: programming, motherfucker.
