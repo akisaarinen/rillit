@@ -28,44 +28,79 @@ Example
 =======
 
 ```scala
+package example
+
+import rillit._
+
 object Main {
-  val aki = Person(
-    name = Name("Aki", "Saarinen"),
-    contact = Contact(Electronic(
-      email = "aki@akisaarinen.fi",
-      web = "http://akisaarinen.fi"
-    ))
+  // A simple instance of Person class used for examples
+  val person = Person(
+    name    = Name("Aki", "Saarinen"),
+    contact = Contact(
+      email = Email("aki", "akisaarinen.fi"),
+      web   = "http://akisaarinen.fi"
+    )
   )
 
-  def main(args: Array[String]) {
-    // The gist of Rillit: boiler-plate free lens creation
-    import rillit._
-    val email = Lenser[Person].contact.electronic.email
-    val name  = Lenser[Person].name
+  // Simples possible
+  def getterExample() {
+    val lens = Lenser[Person].contact.email
+    println("Getter example:")
+    println("  Email: %s".format(lens.get(person))) // 'aki@akisaarinen.fi'
+  }
 
-    // Test case 1: Update email
-    val akiNewEmail = email.set(aki, "aki2@akisaarinen.fi")
-    println("Email update:    %s -> %s".format(email.get(aki), email.get(akiNewEmail)))
+  // Use lens created on-the-fly to set a value into nested case classes.
+  // The traditional way of doing this without lenses is this:
+  //   val updated = person.copy(contact = person.contact.copy(email = something))
+  def setterExample() {
+    val updated = Lenser[Person].contact.email.set(person, Email("foo", "foobar.com"))
 
-    // test case 2: Update name
-    val akiNewName = name.set(aki, Name("Chuck", "Norris"))
-    println("Original person: %s".format(aki))
-    println("Updated name:    %s".format(akiNewName))
+    println("Setter example:")
+    println("  Original person: %s".format(person))  // email = 'aki@akisaarinen.fi'
+    println("  Updated person:  %s".format(updated)) // email = 'foo@foobar.com'
+  }
+
+  // Here we create two simple lenses and demonstrate the ability to compose
+  // them; this is very useful in practice with functional lenses. Of course in
+  // this case we could just `Lenser[Person].contact.email.user` but that wouldn't
+  // demonstrate composition :)
+  def lensCompositionExample() {
+    val user  = Lenser[Email].user
+    val email = Lenser[Person].contact.email
+
+    val lens = email andThen user
+
+    println("Composed lens example:")
+    println("  Getter: %s".format(lens.get(person)))         // 'aki'
+    println("  Setter: %s".format(lens.set(person, "john"))) // email = 'john@akisaarinen.fi'
   }
 
   case class Person(name: Name,  contact: Contact)
   case class Name(first: String, last: String)
-  case class Contact(electronic: Electronic)
-  case class Electronic(email: String, web: String)
+  case class Contact(email: Email, web: String)
+  case class Email(user: String, domain: String) {
+    override def toString = "%s@%s".format(user, domain)
+  }
+
+  def main(args: Array[String]) {
+    getterExample()
+    setterExample()
+    lensCompositionExample()
+  }
 }
 ```
 
 When run, this will produce the following: 
 
 ```
-Email update:    aki@akisaarinen.fi -> aki2@akisaarinen.fi
-Original person: Person(Name(Aki,Saarinen),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
-Updated name:    Person(Name(Chuck,Norris),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
+Getter example:
+  Email: aki@akisaarinen.fi
+Setter example:
+  Original person: Person(Name(Aki,Saarinen),Contact(aki@akisaarinen.fi,http://akisaarinen.fi))
+  Updated person:  Person(Name(Aki,Saarinen),Contact(foo@foobar.com,http://akisaarinen.fi))
+Composed lens example:
+  Getter: aki
+  Setter: Person(Name(Aki,Saarinen),Contact(john@akisaarinen.fi,http://akisaarinen.fi))
 ```
 
 Requirements
