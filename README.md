@@ -8,6 +8,45 @@ lenses using a `Lenser`, implemented with Scala 2.10 macros and `Dynamic`.
 Longer-term aim of `rillit` is to be a stand-alone functional lens
 implementation.
 
+Why?
+====
+
+Functional lenses are composable getters and setters for immutable data
+structures, i.e. usually case classes in Scala.
+
+Say you have the following classes and one class instance:
+
+```scala
+case class A(b: B)
+case class B(c: C)
+case class C(d: Int)
+
+val a = A(B(C(3)))
+```
+
+Now, you want to modify the integer value `d` from 3 to 4 and create a new
+instance of `A` with that value changed. This pattern comes up very often when
+you're writing functional code with immutable data structures.
+
+Using pure Scala, you would do this:
+
+```
+scala> a.copy(b = a.b.copy(c = a.b.c.copy(d = 4)))
+res3: A = A(B(C(4)))
+```
+
+However, this is ugly and using lenses we can do better. Using the lens builder
+from rillit, called `Lenser`, we can just write this:
+
+```
+scala> Lenser[A].b.c.d.set(a, 4)
+res4: A = A(B(C(4)))
+```
+
+Now, this is clearly a lot better. There is a whole lot more we can do with
+lenses (i.e. you can for example compose your lenses together, forming new
+lenses), but just solving this case is great on its own.
+
 Difference to other implementations
 ===================================
 
@@ -24,8 +63,8 @@ both Scalaz and Shapeless contains more boilerplate than in Rillit.
 Also, this being a very early proof-of-concept experiment, the code is not very
 pretty (luckily there's not very much of it).
 
-Example
-=======
+A longer example
+================
 
 ```scala
 package example
