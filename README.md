@@ -98,8 +98,8 @@ myself that this is even possible with `Dynamic` and macros.
 Inspiration
 ===========
 
-Functional lenses has been implemented in a variety of forms for many languages.
-Implementations for Scala, which were the inspiration to create rillit, include:
+Following projects motivated me to create Rillit, either because of their lens
+implementations, use of Scala macros, or both:
 
 * Scalaz: https://github.com/scalaz/scalaz
 * Shapeless: https://github.com/milessabin/shapeless
