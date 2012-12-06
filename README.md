@@ -41,23 +41,21 @@ object Main {
   )
 
   def main(args: Array[String]) {
-    // Create lens to email and update (i.e. create a new instance
-    // of Person).
-    val email = Lenser[Person].contact.electronic.email.apply
+    // Implicit conversion Lenser => Lens
+    import Lenser._
+
+    // The gist of Rillit: boiler-plate free lens creation
+    val email = Lenser[Person].contact.electronic.email
+    val name  = Lenser[Person].name
+
+    // Test case 1: Update email
     val akiNewEmail = email.set(aki, "aki2@akisaarinen.fi")
     println("Email update: %s -> %s".format(email.get(aki), email.get(akiNewEmail)))
 
-    // Create two lenses, first and last, and update both names
-    // (again creates a new instance of Person)
-    val first = Lenser[Person].name.first.apply
-    val last  = Lenser[Person].name.last.apply
-
-    val setFirst: (Person => Person) = (p => first.set(p, "Chuck"))
-    val setLast:  (Person => Person) = (p => last.set(p, "Norris"))
-    val akiNewName = (setFirst andThen setLast)(aki)
-
+    // test case 2: Update name
+    val akiNewName = name.set(aki, Name("Chuck", "Norris"))
     println("Original person: %s".format(aki))
-    println("Updated fields:  %s".format(akiNewName))
+    println("Updated name:    %s".format(akiNewName))
   }
 }
 ```
@@ -68,7 +66,7 @@ When run, this will produce the following:
 [info] Running rillit.Main 
 Email update: aki@akisaarinen.fi -> aki2@akisaarinen.fi
 Original person: Person(Name(Aki,Saarinen),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
-Updated fields:  Person(Name(Chuck,Norris),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
+Updated name:    Person(Name(Chuck,Norris),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
 ```
 
 Requirements

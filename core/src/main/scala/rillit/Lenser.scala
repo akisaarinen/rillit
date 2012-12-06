@@ -15,6 +15,8 @@ case class Lenser[A]() extends Dynamic {
 }
 
 object Lenser {
+  implicit def LenserToLens[A,B](lenser: InitializedLenser[A,B]) = lenser.apply()
+
   def build[A, B](lens: Lens[A,B]) = new InitializedLenser[A,B] {
     def apply() = lens
   }
