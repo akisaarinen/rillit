@@ -104,6 +104,7 @@ Implementations for Scala, which were the inspiration to create rillit, include:
 * Scalaz: https://github.com/scalaz/scalaz
 * Shapeless: https://github.com/milessabin/shapeless
 * Macrocosm: https://github.com/retronym/macrocosm
+* sqltyped: https://github.com/jonifreeman/sqltyped
 
 License
 =======
