@@ -6,6 +6,7 @@ import scala.reflect.macros._
 
 trait SimpleLens[A, B] {
   def get(x: A): B
+  def set(x: A, v: B): A
 }
 
 class Lenser[T] extends Dynamic {
@@ -48,6 +49,17 @@ object Lenser {
             Select(Ident(newTermName("x$")), newTermName(name))
           )
 
+        val setF =
+          DefDef(
+            Modifiers(), newTermName("set"), List(),
+            List(List(mkParam("x$", lensTpe.tpe), mkParam("v$", memberTpe))),
+            TypeTree(),
+            Apply(
+              Select(Ident(newTermName("x$")), newTermName("copy")),
+              List(AssignOrNamedArg(Ident(newTermName(name)), Ident(newTermName("v$"))))
+            )
+          )
+
         Block(
           List(
             ClassDef(Modifiers(Flag.FINAL), newTypeName("$anon"), List(),
@@ -62,10 +74,11 @@ object Lenser {
                     List(List()),
                     TypeTree(),
                     Block(
-                      List(
-                        Apply(
-                          Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
-                      Literal(Constant(())))), getF))
+                      List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
+                      Literal(Constant(())))),
+                  getF,
+                  setF
+                ))
             )),
           Apply(Select(New(Ident(newTypeName("$anon"))), nme.CONSTRUCTOR), List())
         )
