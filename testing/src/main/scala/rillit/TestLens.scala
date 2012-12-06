@@ -18,7 +18,7 @@ object Main {
   )
 
   def main(args: Array[String]) {
-    val email = new LensBuilder[Person].contact.electronic.email.apply
+    val email = LensBuilder[Person]().contact.electronic.email.apply
 
     val aki2 = email.set(aki, "aki2@akisaarinen.fi")
 

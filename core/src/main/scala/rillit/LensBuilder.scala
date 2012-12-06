@@ -10,7 +10,7 @@ trait InitializedLensBuilder[A, B] extends Dynamic {
   def selectDynamic(propName: String) = macro LensBuilder.selectDynamic[A,B]
 }
 
-class LensBuilder[A] extends Dynamic {
+case class LensBuilder[A] extends Dynamic {
   def selectDynamic(propName: String) = macro LensBuilder.initializeBuilderImpl[A]
 }
 
