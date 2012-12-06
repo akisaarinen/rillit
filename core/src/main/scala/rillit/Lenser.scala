@@ -41,6 +41,17 @@ object Lenser {
           case _                      => abort("member %s is not a field".format(name))
         }
 
+        val constructor =
+          DefDef(
+            Modifiers(),
+            nme.CONSTRUCTOR,
+            List(),
+            List(List()),
+            TypeTree(),
+            Block(
+              List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
+              Literal(Constant(()))))
+
         val getF =
           DefDef(
             Modifiers(), newTermName("get"), List(),
@@ -67,15 +78,7 @@ object Lenser {
                 AppliedTypeTree(
                   Ident(c.mirror.staticClass("rillit.SimpleLens")), List(lensTpe, TypeTree(memberTpe)))),
                 emptyValDef, List(
-                  DefDef(
-                    Modifiers(),
-                    nme.CONSTRUCTOR,
-                    List(),
-                    List(List()),
-                    TypeTree(),
-                    Block(
-                      List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
-                      Literal(Constant(())))),
+                  constructor,
                   getF,
                   setF
                 ))
