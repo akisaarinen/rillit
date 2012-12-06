@@ -81,7 +81,7 @@ object Main {
     )
   )
 
-  // Simples possible
+  // Simplest possible
   def getterExample() {
     val lens = Lenser[Person].contact.email
     println("Getter example:")
