@@ -47,6 +47,13 @@ Original: aki@akisaarinen.fi
 Updated:  aki2@akisaarinen.fi
 ```
 
+Requirements
+============
+
+* Scala 2.10 (tested with 2.10.0-RC5, but will probably work with older release candidates as well)
+* SBT 0.12
+* A bit of love for functional lenses
+
 Caveats
 =======
 
