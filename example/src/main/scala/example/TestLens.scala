@@ -1,4 +1,4 @@
-package rillit
+package example
 
 case class Person(name: Name,  contact: Contact)
 case class Name(first: String, last: String)
@@ -17,7 +17,7 @@ object Main {
   )
 
   def main(args: Array[String]) {
-    // Implicit conversion Lenser => Lens
+    import rillit._
     import Lenser._
 
     // The gist of Rillit: boiler-plate free lens creation

@@ -17,9 +17,9 @@ object build extends Build {
         settings = sharedSettings
     )
 
-    lazy val testing = Project(
-        id = "rillit-testing",
-        base = file("testing"),
+    lazy val example = Project(
+        id = "example",
+        base = file("example"),
         settings = sharedSettings,
         dependencies = Seq(core)
     )
