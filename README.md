@@ -42,3 +42,8 @@ When run, this will produce the following:
 Original: aki@akisaarinen.fi
 Updated:  aki2@akisaarinen.fi
 ```
+
+License
+=======
+
+Rillit is released under the Apache License, Version 2.0.
