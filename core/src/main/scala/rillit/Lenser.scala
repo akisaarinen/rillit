@@ -29,7 +29,7 @@ object Lenser {
           case _                             => abort("No inner type found")
         }
       case x =>
-        c.abort(c.enclosingPosition, "unexpected c.prefix tree: " + x)
+        abort("unexpected c.prefix tree: %s".format(x))
     }
     c.Expr[Any](c.resetAllAttrs(t))
   }

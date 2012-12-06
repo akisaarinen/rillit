@@ -40,7 +40,7 @@ object LensBuilder {
        createBuilder(c)(lens, lensSourceTpe, lensTargetTpe, name)
 
      case x =>
-       c.abort(c.enclosingPosition, "unexpected c.prefix tree: " + x)
+       abort("unexpected c.prefix tree: %s".format(x))
    }
    c.Expr[Any](c.resetAllAttrs(t))
  }
@@ -71,7 +71,7 @@ object LensBuilder {
         createBuilder(c)(combinedLens, c.weakTypeOf[A], lensTargetTpe, name)
 
       case x =>
-        c.abort(c.enclosingPosition, "unexpected c.prefix tree: " + x)
+        abort("unexpected c.prefix tree: %s".format(x))
     }
     c.Expr[Any](c.resetAllAttrs(t))
   }
