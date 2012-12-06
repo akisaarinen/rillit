@@ -12,15 +12,16 @@ fields you want to include in the lens. And that's it.
 Better documentation is on it's way, but here's the gist:
 
 ```scala
-case class Electronic(email: String, web: String)
-case class Contact(electronic: Electronic)
+package rillit
+
+case class Person(name: Name,  contact: Contact)
 case class Name(first: String, last: String)
-case class Person(name: Name, age: Int, contact: Contact)
+case class Contact(electronic: Electronic)
+case class Electronic(email: String, web: String)
 
 object Main {
   val aki = Person(
     name = Name("Aki", "Saarinen"),
-    age  = 27,
     contact = Contact(
       electronic = Electronic(
         email = "aki@akisaarinen.fi",
@@ -30,12 +31,23 @@ object Main {
   )
 
   def main(args: Array[String]) {
-    val email = new LensBuilder[Person].contact.electronic.email.apply
+    // Create lens to email and update (i.e. create a new instance
+    // of Person).
+    val email = Lenser[Person]().contact.electronic.email.apply
+    val akiNewEmail = email.set(aki, "aki2@akisaarinen.fi")
+    println("Email update: %s -> %s".format(email.get(aki), email.get(akiNewEmail)))
 
-    val aki2 = email.set(aki, "aki2@akisaarinen.fi")
+    // Create two lenses, first and last, and update both names
+    // (again creates a new instance of Person)
+    val first = Lenser[Person]().name.first.apply
+    val last  = Lenser[Person]().name.last.apply
 
-    println("Original: %s".format(email.get(aki)))
-    println("Updated:  %s".format(email.get(aki2)))
+    val setFirst: (Person => Person) = (p => first.set(p, "Chuck"))
+    val setLast:  (Person => Person) = (p => last.set(p, "Norris"))
+    val akiNewName = (setFirst andThen setLast)(aki)
+
+    println("Original person: %s".format(aki))
+    println("Updated fields:  %s".format(akiNewName))
   }
 }
 ```
@@ -43,8 +55,10 @@ object Main {
 When run, this will produce the following: 
 
 ```
-Original: aki@akisaarinen.fi
-Updated:  aki2@akisaarinen.fi
+[info] Running rillit.Main 
+Email update: aki@akisaarinen.fi -> aki2@akisaarinen.fi
+Original person: Person(Name(Aki,Saarinen),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
+Updated fields:  Person(Name(Chuck,Norris),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
 ```
 
 Requirements
