@@ -4,15 +4,6 @@ import language.experimental.macros
 import language.dynamics
 import scala.reflect.macros._
 
-class OhMy extends Dynamic {
-  def selectDynamic(methodName: String)() {
-    println(s"selectdnamic for $methodName")
-  }
-  def applyDynamic(methodName: String)() {
-    println(s"""| methodName: $methodName""".stripMargin)
-  }
-}
-
 trait SimpleLens[A, B] {
   def get(x: A): B
 }
