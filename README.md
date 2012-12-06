@@ -3,8 +3,11 @@ Rillit
 
 Experimental functional lenses for Scala 2.10 using Macros.
 
-Rillit combines the use of `Dynamic` with macros so that we get
-boilerplate-free creation of functional lenses in Scala. 
+Rillit combines the use of `Dynamic` with macros to provide
+functional lenses in Scala with minimal boilerplate. You can
+create lenses for nested case classes in a type-safe way by
+simply instantiating the lens builder and chaining whatever
+fields you want to include in the lens. And that's it.
 
 Better documentation is on it's way, but here's the gist:
 
