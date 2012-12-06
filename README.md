@@ -60,6 +60,13 @@ with the functionality of `Lenser`, to make lens both lens creation and usage
 as convenient as possible. At the moment of writing this, creation of lenses in
 both Scalaz and Shapeless contains more boilerplate than in Rillit.
 
+An example use of `Lenser` (which does not actually produce a `Lens` but a `Lenser[A,B]`
+which can be implicitly converted to `Lens[A,B]`):
+
+```scala
+val lens = Lenser[Person].contact.email
+```
+
 Also, this being a very early proof-of-concept experiment, the code is not very
 pretty (luckily there's not very much of it).
 
