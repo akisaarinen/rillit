@@ -4,11 +4,6 @@ import language.experimental.macros
 import language.dynamics
 import scala.reflect.macros._
 
-trait SimpleLens[A, B] {
-  def get(x: A): B
-  def set(x: A, v: B): A
-}
-
 class Lenser[T] extends Dynamic {
   def selectDynamic(propName: String)  = macro Lenser.selectDynamic[T]
 }
@@ -76,7 +71,7 @@ object Lenser {
             ClassDef(Modifiers(Flag.FINAL), newTypeName("$anon"), List(),
               Template(List(
                 AppliedTypeTree(
-                  Ident(c.mirror.staticClass("rillit.SimpleLens")), List(lensTpe, TypeTree(memberTpe)))),
+                  Ident(c.mirror.staticClass("rillit.Lens")), List(lensTpe, TypeTree(memberTpe)))),
                 emptyValDef, List(
                   constructor,
                   getF,
