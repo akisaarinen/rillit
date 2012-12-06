@@ -1,6 +1,5 @@
 package rillit
 
-
 case class Electronic(email: String, web: String)
 case class Contact(electronic: Electronic)
 case class Name(first: String, last: String)
@@ -19,26 +18,12 @@ object Main {
   )
 
   def main(args: Array[String]) {
-    lenses()
-    builder()
-  }
+    val email = new LensBuilder[Person].contact.electronic.email.apply
 
-  def builder() {
-    val builder = LensBuilder.build(new Lenser[Person].contact)
-    println(builder.electronic.email.apply().get(aki))
-  }
+    val aki2 = email.set(aki, "aki2@akisaarinen.fi")
 
-  def lenses() {
-    val email      = new Lenser[Electronic].email
-    val electronic = new Lenser[Contact].electronic
-    val contact    = new Lenser[Person].contact
-
-    val lens = contact andThen electronic andThen email
-
-    val aki2 = lens.set(aki, "aki2@akisaarinen.fi")
-
-    println("Original: %s".format(lens.get(aki)))
-    println("Updated:  %s".format(lens.get(aki2)))
+    println("Original: %s".format(email.get(aki)))
+    println("Updated:  %s".format(email.get(aki2)))
   }
 }
 
