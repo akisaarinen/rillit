@@ -1,19 +1,25 @@
 Rillit
 ======
 
-Experimental functional lenses for Scala 2.10 using Macros.
+Rillit provides experimental functional lenses for Scala 2.10. 
+
+Right now it is mostly an experiment in providing minimum effort creation of
+lenses using a `Lenser`, implemented with Scala 2.10 macros and `Dynamic`.
+Longer-term aim of `rillit` is to be a stand-alone functional lens
+implementation.
 
 Difference to other implementations
 ===================================
 
-Rillit combines the use of `Dynamic` with macros to provide creation of
-functional lenses with minimal boilerplate.
-
 The lenses themselves are very bare-bones here, the main point is to
 demonstrate the ability to create lenses in a boilerplate-free way for nested
-case classes. Rillit provides a `Lenser` which does just that, using macros and
-`Dynamic`. Features included in e.g. Scalaz or Shapeless lenses could be
-combined with Rillit `Lenser` to make lens creation more convenient.
+case classes. `Lenser` does just that, using macros and
+`Dynamic`. 
+
+Lens features included in e.g. Scalaz or Shapeless lenses could be combined
+with the functionality of `Lenser`, to make lens both lens creation and usage
+as convenient as possible. At the moment of writing this, creation of lenses in
+both Scalaz and Shapeless contains more boilerplate than in Rillit.
 
 Also, this being a very early proof-of-concept experiment, the code is not very
 pretty (luckily there's not very much of it).
@@ -22,8 +28,6 @@ Example
 =======
 
 ```scala
-package example
-
 object Main {
   val aki = Person(
     name = Name("Aki", "Saarinen"),
@@ -59,7 +63,6 @@ object Main {
 When run, this will produce the following: 
 
 ```
-[info] Running example.Main 
 Email update:    aki@akisaarinen.fi -> aki2@akisaarinen.fi
 Original person: Person(Name(Aki,Saarinen),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
 Updated name:    Person(Name(Chuck,Norris),Contact(Electronic(aki@akisaarinen.fi,http://akisaarinen.fi)))
