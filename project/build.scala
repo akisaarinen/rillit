@@ -6,7 +6,7 @@ object build extends Build {
       organization := "fi.akisaarinen",
       version := "0.1-SNAPSHOT",
       scalaVersion := "2.10.0-RC5",
-      scalacOptions ++= Seq("-Xlog-free-terms", "-Ymacro-debug-lite"),
+      //scalacOptions ++= Seq("-Xlog-free-terms", "-Ymacro-debug-lite"),
       libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
       libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
     )
