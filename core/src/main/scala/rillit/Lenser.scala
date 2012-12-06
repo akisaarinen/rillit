@@ -13,6 +13,10 @@ class OhMy extends Dynamic {
   }
 }
 
+trait SimpleLens[A, B] {
+  def get(x: A): B
+}
+
 class Lenser[T] extends Dynamic {
   def selectDynamic(propName: String)  = macro Lenser.selectDynamic[T]
 }
@@ -37,11 +41,43 @@ object Lenser {
           case AppliedTypeTree(_, List(tpe)) => tpe
           case _                             => abort("No inner type found")
         }
-        val getter = Function(
-          List(mkParam("a$", lensTpe.tpe)),
-          Select(Ident(newTermName("a$")), newTermName(name))
+        val calledMember = lensTpe.tpe.member(newTermName(name)) orElse {
+          abort("value %s is not a member of %s".format(name, lensTpe))
+        }
+        val memberTpe = calledMember.typeSignatureIn(lensTpe.tpe) match {
+          case NullaryMethodType(tpe) => tpe
+          case _                      => abort("member %s is not a field".format(name))
+        }
+
+        val getF =
+          DefDef(
+            Modifiers(), newTermName("get"), List(),
+            List(List(mkParam("x$", lensTpe.tpe))),
+            TypeTree(),
+            Select(Ident(newTermName("x$")), newTermName(name))
+          )
+
+        Block(
+          List(
+            ClassDef(Modifiers(Flag.FINAL), newTypeName("$anon"), List(),
+              Template(List(
+                AppliedTypeTree(
+                  Ident(c.mirror.staticClass("rillit.SimpleLens")), List(lensTpe, TypeTree(memberTpe)))),
+                emptyValDef, List(
+                  DefDef(
+                    Modifiers(),
+                    nme.CONSTRUCTOR,
+                    List(),
+                    List(List()),
+                    TypeTree(),
+                    Block(
+                      List(
+                        Apply(
+                          Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
+                      Literal(Constant(())))), getF))
+            )),
+          Apply(Select(New(Ident(newTypeName("$anon"))), nme.CONSTRUCTOR), List())
         )
-        getter
 
       case x =>
         println(x._1.tpe)
