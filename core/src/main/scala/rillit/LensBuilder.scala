@@ -18,6 +18,10 @@ trait LensBuilder[A, B] extends Dynamic {
 }
 
 object LensBuilder {
+  def build[A, B](lens: Lens[A,B]) = new LensBuilder[A,B] {
+    def apply() = lens
+  }
+
   def selectDynamic[A: c.WeakTypeTag, B: c.WeakTypeTag](c: Context { type PrefixType = LensBuilder[A, B] })(propName: c.Expr[String]) = {
     import c.universe._
 
@@ -57,8 +61,6 @@ object LensBuilder {
             Block(
               List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
               Literal(Constant(()))))
-
-
 
         val applyF =
           DefDef(

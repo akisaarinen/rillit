@@ -24,9 +24,7 @@ object Main {
   }
 
   def builder() {
-    val builder = new LensBuilder[Person, Contact] {
-      override def apply() = new Lenser[Person].contact
-    }
+    val builder = LensBuilder.build(new Lenser[Person].contact)
     println(builder.electronic.email.apply().get(aki))
   }
 
