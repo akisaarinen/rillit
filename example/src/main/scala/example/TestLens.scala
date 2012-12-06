@@ -18,7 +18,6 @@ object Main {
 
   def main(args: Array[String]) {
     import rillit._
-    import Lenser._
 
     // The gist of Rillit: boiler-plate free lens creation
     val email = Lenser[Person].contact.electronic.email
