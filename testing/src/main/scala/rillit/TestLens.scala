@@ -18,11 +18,23 @@ object Main {
     )
   )
 
-  val email      = new Lenser[Electronic].email
-  val electronic = new Lenser[Contact].electronic
-  val contact    = new Lenser[Person].contact
-
   def main(args: Array[String]) {
+    lenses()
+    builder()
+  }
+
+  def builder() {
+    val builder = new LensBuilder[Person, Contact] {
+      override def apply() = new Lenser[Person].contact
+    }
+    println(builder.electronic.email.apply().get(aki))
+  }
+
+  def lenses() {
+    val email      = new Lenser[Electronic].email
+    val electronic = new Lenser[Contact].electronic
+    val contact    = new Lenser[Person].contact
+
     val lens = contact andThen electronic andThen email
 
     val aki2 = lens.set(aki, "aki2@akisaarinen.fi")
