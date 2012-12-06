@@ -54,6 +54,17 @@ Requirements
 * SBT 0.12
 * A bit of love for functional lenses
 
+Usage
+=====
+
+Rillit is not currently distributed as a library, as this is just an experiment on
+how the functional lenses could be implemented. To try it out, install SBT 0.12,
+and just run the example with:
+
+```
+sbt "project rillit-testing" run
+```
+
 Caveats
 =======
 
