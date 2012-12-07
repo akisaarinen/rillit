@@ -14,38 +14,57 @@ Why?
 Functional lenses are composable getters and setters for immutable data
 structures, i.e. usually case classes in Scala.
 
-Say you have the following classes and one class instance:
+Say you have the following case class structure for describing a person. The
+nesting seems unncessary in this small example, but that's what you need to do
+with larger data structures, so bear with me:
 
 ```scala
-case class A(b: B)
-case class B(c: C)
-case class C(d: Int)
+case class Email(user: String, domain: String)
+case class Contact(email: Email, web: String)
+case class Person(name: String, contact: Contact)
 
-val a = A(B(C(3)))
+val person = Person(
+  name = "Aki Saarinen",
+  contact = Contact(
+    email = Email("aki", "akisaarinen.fi"),
+    web   = "http://akisaarinen.fi"
+  )
+)
 ```
 
-Now, you want to modify the integer value `d` from 3 to 4 and create a new
-instance of `A` with that value changed. This pattern comes up very often when
-you're writing functional code with immutable data structures.
+Now, say you want to modify the `user` of the email address from 'aki'
+to 'john'. And because we're working with immutable data structures, we can't
+just assign a new value, but we want to create a new instance of `Person` with
+the `user` field updated.
+
+This pattern comes up very often when writing functional code with immutable
+data structures.
 
 Using pure Scala, you would do this:
 
 ```
-scala> a.copy(b = a.b.copy(c = a.b.c.copy(d = 4)))
-res3: A = A(B(C(4)))
+scala> person.copy(contact = person.contact.copy(email = person.contact.email.copy(user = "john")))
+res0: Person = Person(Aki Saarinen,Contact(Email(john,akisaarinen.fi),http://akisaarinen.fi))
 ```
 
-However, this is ugly and using lenses we can do better. Using the lens builder
-from rillit, called `Lenser`, we can just write this:
+The field gets updated, but the syntax is very verbose and ugly.  
+
+Functional lenses can ease the situation. Rillit provides a `Lenser`, which
+creates a new functional lens for your `user` field, hence making its update an
+easy task:
 
 ```
-scala> Lenser[A].b.c.d.set(a, 4)
-res4: A = A(B(C(4)))
+scala> Lenser[Person].contact.email.user.set(person, "john")
+res1: Person = Person(Aki Saarinen,Contact(Email(john,akisaarinen.fi),http://akisaarinen.fi))
 ```
 
-Now, this is clearly a lot better. There is a whole lot more we can do with
-lenses (i.e. you can for example compose your lenses together, forming new
-lenses), but just solving this case is great on its own.
+This performs the exact same thing as our long nested `copy` soup above, but
+looks a lot more civilized.
+
+There is a whole lot more we can do with lenses (i.e. you can for example
+compose your lenses together, forming new lenses), but just solving this case
+is great on its own. Rillit focuses on implementing a boilerplate-free `Lenser`
+for the lens creation.
 
 Difference to other implementations
 ===================================
