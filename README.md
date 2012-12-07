@@ -8,6 +8,10 @@ lenses using a `Lenser`, implemented with Scala 2.10 macros and `Dynamic`.
 Longer-term aim of `rillit` is to be a stand-alone functional lens
 implementation.
 
+Here is my [blog
+post](http://akisaarinen.fi/blog/2012/12/07/boilerplate-free-functional-lenses-for-scala/)
+explaining shortly what Rillit does.
+
 Why?
 ====
 
