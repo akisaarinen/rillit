@@ -117,41 +117,36 @@ object Lenser {
   def createLens[T: c.WeakTypeTag](c: Context)(lensTpe: c.universe.Type, memberTpe: c.universe.Type, name: String) = {
     import c.universe._
 
-    def mkParam(name: String, tpe: Type) =
-      ValDef(Modifiers(Flag.PARAM), newTermName(name), TypeTree(tpe), EmptyTree)
+    def mkParam(name: TermName, tpe: Type) =
+      ValDef(Modifiers(Flag.PARAM), name, TypeTree(tpe), EmptyTree)
 
-    def createDef(name: String, params: List[(String, Type)], body: Tree): Tree = {
+    def createDef(name: TermName, params: List[(TermName, Type)], body: Tree): Tree = {
       DefDef(
-        Modifiers(), newTermName(name), List(),
+        Modifiers(), name, List(),
         List(params.map { case (name, tpe) => mkParam(name, tpe) }),
         TypeTree(),
         body
       )
     }
 
-    val constructor =
-      DefDef(
-        Modifiers(),
-        nme.CONSTRUCTOR,
-        List(),
-        List(List()),
-        TypeTree(),
-        Block(
-          List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
-          Literal(Constant(()))))
+    val constructor = createDef(
+      name = nme.CONSTRUCTOR,
+      params = List(),
+      body = Block(List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)), Literal(Constant(())))
+    )
 
     val getF = createDef(
-      name   = "get",
-      params = List("x$" -> lensTpe),
+      name   = newTermName("get"),
+      params = List(newTermName("x$") -> lensTpe),
       body   = Select(Ident(newTermName("x$")), newTermName(name))
     )
 
     val setF = createDef(
-      name   = "set",
-      params = List("x$" -> lensTpe, "v$" -> memberTpe),
+      name   = newTermName("set"),
+      params = List(newTermName("x$") -> lensTpe, newTermName("v$") -> memberTpe),
       body   = Apply(
-                Select(Ident(newTermName("x$")), newTermName("copy")),
-                List(AssignOrNamedArg(Ident(newTermName(name)), Ident(newTermName("v$"))))
+                 Select(Ident(newTermName("x$")), newTermName("copy")),
+                 List(AssignOrNamedArg(Ident(newTermName(name)), Ident(newTermName("v$"))))
                )
     )
 
