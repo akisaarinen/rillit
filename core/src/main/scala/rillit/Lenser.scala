@@ -120,6 +120,15 @@ object Lenser {
     def mkParam(name: String, tpe: Type) =
       ValDef(Modifiers(Flag.PARAM), newTermName(name), TypeTree(tpe), EmptyTree)
 
+    def createDef(name: String, params: List[(String, Type)], body: Tree): Tree = {
+      DefDef(
+        Modifiers(), newTermName(name), List(),
+        List(params.map { case (name, tpe) => mkParam(name, tpe) }),
+        TypeTree(),
+        body
+      )
+    }
+
     val constructor =
       DefDef(
         Modifiers(),
@@ -131,24 +140,20 @@ object Lenser {
           List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
           Literal(Constant(()))))
 
-    val getF =
-      DefDef(
-        Modifiers(), newTermName("get"), List(),
-        List(List(mkParam("x$", lensTpe))),
-        TypeTree(),
-        Select(Ident(newTermName("x$")), newTermName(name))
-      )
+    val getF = createDef(
+      name   = "get",
+      params = List("x$" -> lensTpe),
+      body   = Select(Ident(newTermName("x$")), newTermName(name))
+    )
 
-    val setF =
-      DefDef(
-        Modifiers(), newTermName("set"), List(),
-        List(List(mkParam("x$", lensTpe), mkParam("v$", memberTpe))),
-        TypeTree(),
-        Apply(
-          Select(Ident(newTermName("x$")), newTermName("copy")),
-          List(AssignOrNamedArg(Ident(newTermName(name)), Ident(newTermName("v$"))))
-        )
-      )
+    val setF = createDef(
+      name   = "set",
+      params = List("x$" -> lensTpe, "v$" -> memberTpe),
+      body   = Apply(
+                Select(Ident(newTermName("x$")), newTermName("copy")),
+                List(AssignOrNamedArg(Ident(newTermName(name)), Ident(newTermName("v$"))))
+               )
+    )
 
     Block(
       List(
