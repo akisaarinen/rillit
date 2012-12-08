@@ -36,7 +36,7 @@ object Lenser {
          case NullaryMethodType(tpe) => tpe
          case _                      => abort("member %s is not a field".format(name))
        }
-       val lens = createLens[T](c)(lensSourceTpe, name)
+       val lens = createLens[T](c)(lensSourceTpe, lensTargetTpe, name)
        createBuilder(c)(lens, lensSourceTpe, lensTargetTpe, name)
 
      case x =>
@@ -65,7 +65,7 @@ object Lenser {
 
         val parentApply = x.tpe.member(newTermName("apply"))
         val parentLens = Apply(Select(x, parentApply), List())
-        val lens = createLens[B](c)(lensSourceTpe, name)
+        val lens = createLens[B](c)(lensSourceTpe, lensTargetTpe, name)
         val combinedLens = Apply(Select(lens, newTermName("compose")), List(parentLens))
 
         createBuilder(c)(combinedLens, c.weakTypeOf[A], lensTargetTpe, name)
@@ -114,22 +114,11 @@ object Lenser {
   }
 
 
-  def createLens[T: c.WeakTypeTag](c: Context)(lensTpe: c.universe.Type, name: String) = {
+  def createLens[T: c.WeakTypeTag](c: Context)(lensTpe: c.universe.Type, memberTpe: c.universe.Type, name: String) = {
     import c.universe._
 
-    def abort(reason: String) = c.abort(c.enclosingPosition, reason)
     def mkParam(name: String, tpe: Type) =
       ValDef(Modifiers(Flag.PARAM), newTermName(name), TypeTree(tpe), EmptyTree)
-
-    import treeBuild._
-
-    val calledMember = lensTpe.member(newTermName(name)) orElse {
-      abort("value %s is not a member of %s".format(name, lensTpe))
-    }
-    val memberTpe = calledMember.typeSignatureIn(lensTpe) match {
-      case NullaryMethodType(tpe) => tpe
-      case _                      => abort("member %s is not a field".format(name))
-    }
 
     val constructor =
       DefDef(
