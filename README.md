@@ -1,3 +1,17 @@
+Rillit (without Dynamic)
+========================
+
+This is a fork of [Aki Saarinen](https://github.com/akisaarinen)'s
+[Rillit](http://akisaarinen.fi/blog/2012/12/07/boilerplate-free-functional-lenses-for-scala/)
+that provides exactly the same API and usage but does not use `Dynamic`.
+
+The only changes are to the `Lenser` object, and the original examples will
+run without modification.
+
+This fork was developed by [Travis Brown](https://twitter.com/travisbrown)
+as a proof of concept.
+Aki Saarinen's original documentation for Rillit continues below.
+
 Rillit
 ======
 
