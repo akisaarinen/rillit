@@ -1,179 +1,245 @@
 package rillit
 
-import language.experimental.macros
-import language.dynamics
-import scala.reflect.macros._
-
-trait InitializedLenser[A, B] extends Dynamic {
-  def apply(): Lens[A, B]
-
-  def selectDynamic(propName: String) = macro Lenser.selectDynamic[A,B]
-}
-
-case class Lenser[A]() extends Dynamic {
-  def selectDynamic(propName: String) = macro Lenser.initializeBuilderImpl[A]
-}
+import scala.language.experimental.macros
+import scala.reflect.macros.Context
 
 object Lenser {
-  def build[A, B](lens: Lens[A,B]) = new InitializedLenser[A,B] {
-    def apply() = lens
+  trait StackedLens[A, B, C] extends Lens[A, C] {
+    protected def parent: Lens[A, B]
+    protected def local: Lens[B, C]
+    protected def lens = local compose parent
+    def get(x: A) = lens.get(x)
+    def set(x: A, v: C) = lens.set(x, v)
   }
 
-  def initializer[A] = new Lenser[A]
+  trait TopLens[A, B] extends StackedLens[A, A, B] {
+    protected def parent = ???
+    override protected def lens = local
+  }
 
-  def initializeBuilderImpl[T: c.WeakTypeTag](c: Context)(propName: c.Expr[String]) = {
-   import c.universe._
+  /** Our point of contact with the outside world. */
+  def apply[A]: Any = macro apply_impl[A]
 
-   def abort(reason: String) = c.abort(c.enclosingPosition, reason)
-
-   val t = (c.prefix.tree, propName.tree) match {
-     case (x, Literal(Constant(name: String))) =>
-       val lensSourceTpe = c.weakTypeOf[T]
-       val calledMember = lensSourceTpe.member(newTermName(name)) orElse {
-         abort("value %s is not a member of %s".format(name, lensSourceTpe))
-       }
-       val lensTargetTpe = calledMember.typeSignatureIn(lensSourceTpe) match {
-         case NullaryMethodType(tpe) => tpe
-         case _                      => abort("member %s is not a field".format(name))
-       }
-       val lens = createLens[T](c)(lensSourceTpe, name)
-       createBuilder(c)(lens, lensSourceTpe, lensTargetTpe, name)
-
-     case x =>
-       abort("unexpected c.prefix tree: %s".format(x))
-   }
-   c.Expr[Any](c.resetAllAttrs(t))
- }
-
-
-  def selectDynamic[A: c.WeakTypeTag, B: c.WeakTypeTag](c: Context { type PrefixType = InitializedLenser[A, B] })(propName: c.Expr[String]) = {
+  def apply_impl[A: c.WeakTypeTag](c: Context) = {
     import c.universe._
 
-    def abort(reason: String) = c.abort(c.enclosingPosition, reason)
-
-    val t = (c.prefix.tree, propName.tree) match {
-      case (x, Literal(Constant(name: String))) =>
-        val lensSourceTpe = c.weakTypeOf[B]
-
-        val calledMember = lensSourceTpe.member(newTermName(name)) orElse {
-          abort("value %s is not a member of %s".format(name, lensSourceTpe))
-        }
-        val lensTargetTpe = calledMember.typeSignatureIn(lensSourceTpe) match {
-          case NullaryMethodType(tpe) => tpe
-          case _                      => abort("member %s is not a field".format(name))
-        }
-
-        val parentApply = x.tpe.member(newTermName("apply"))
-        val parentLens = Apply(Select(x, parentApply), List())
-        val lens = createLens[B](c)(lensSourceTpe, name)
-        val combinedLens = Apply(Select(lens, newTermName("compose")), List(parentLens))
-
-        createBuilder(c)(combinedLens, c.weakTypeOf[A], lensTargetTpe, name)
-
-      case x =>
-        abort("unexpected c.prefix tree: %s".format(x))
+    // Each node in the tree has a class and a set of definitions it expects.
+    trait Node {
+      def classDef: ClassDef
+      def defs: List[Tree]
     }
-    c.Expr[Any](c.resetAllAttrs(t))
-  }
 
-  def createBuilder(c: Context)(lens: c.universe.Tree, originalBuilderTpe: c.universe.Type, lensTargetTpe: c.universe.Type, name: String) = {
-    import c.universe._
+    case class RootNode(classDef: ClassDef) extends Node {
+      def defs = classDef :: Nil
+    }
 
-    val constructor =
-      DefDef(
+    case class NonRootNode(
+      classDef: ClassDef,
+      lensDef: ClassDef,
+      acc: MethodSymbol
+    ) extends Node {
+      def defs = classDef :: lensDef :: Nil
+    }
+
+    def instance(node: Node) = Apply(
+      Select(New(Ident(node.classDef.name)), nme.CONSTRUCTOR),
+      Nil
+    )
+
+    // A convenience method for creating a list of a type's accessor methods.
+    def accessors(t: Type) = t.declarations.collect {
+      case acc: MethodSymbol if acc.isCaseAccessor => acc
+    }.toList
+
+    def childMethods(children: List[Node]) = children.collect {
+      case node @ NonRootNode(classDef, _, acc) => DefDef(
         Modifiers(),
-        nme.CONSTRUCTOR,
-        List(),
-        List(List()),
+        newTermName(acc.name.decoded),
+        Nil,
+        Nil,
         TypeTree(),
-        Block(
-          List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
-          Literal(Constant(()))))
-
-    val applyF =
-      DefDef(
-        Modifiers(), newTermName("apply"), List(),
-        List(),
-        TypeTree(),
-        lens
+        instance(node)
       )
+    }
 
-    Block(
-      List(
-        ClassDef(Modifiers(Flag.FINAL), newTypeName("$anon"), List(),
-          Template(List(
-            AppliedTypeTree(
-              Ident(c.mirror.staticClass("rillit.InitializedLenser")), List(TypeTree(originalBuilderTpe), TypeTree(lensTargetTpe)))),
-            emptyValDef, List(
-              constructor,
-              applyF
-            ))
-        )),
-      Apply(Select(New(Ident(newTypeName("$anon"))), nme.CONSTRUCTOR), List())
+    val lenser = Select(Ident("rillit"), "Lenser")
+    val source = c.weakTypeOf[A] 
+
+    val tree = util.Tree.unfold(accessors(source))(
+      acc => accessors(acc.returnType)
+    ).histo[Node] {
+      case (Some(acc), depth, children) =>
+        val parent = acc.owner.asClass.toType
+        val target = acc.returnType
+        val anon = newTypeName(c.fresh)
+        val self = newTermName(c.fresh)
+        val lens = createLens(c)(acc, parent, target)
+
+        val classDef = ClassDef(
+          Modifiers(),
+          anon,
+          Nil,
+          Template(
+            List(
+              if (depth == 1) AppliedTypeTree(
+                Select(lenser, newTypeName("TopLens")),
+                List(TypeTree(source), TypeTree(target))
+              ) else AppliedTypeTree(
+                Select(lenser, newTypeName("StackedLens")),
+                List(TypeTree(source), TypeTree(parent), TypeTree(target))
+              )
+            ),
+            emptyValDef,
+            constructor(c) ::
+            ValDef(
+              Modifiers(Flag.PROTECTED),
+              newTermName("local"),
+              TypeTree(),
+              Apply(Select(New(Ident(lens.name)), nme.CONSTRUCTOR), Nil)
+            ) :: childMethods(children.map(_.value))
+          )
+        )
+
+        NonRootNode(classDef, lens, acc)
+
+     case (None, _, children) =>
+        RootNode(ClassDef(
+          Modifiers(),
+          newTypeName(c.fresh),
+          Nil,
+          Template(
+            Ident(newTypeName("AnyRef")) :: Nil,
+            emptyValDef,
+            constructor(c) :: childMethods(children.map(_.value))
+          )
+        ))
+    }
+
+    def assignParents(parentIf: Option[ClassDef])(
+      tree: util.Tree[Node]
+    ): util.Tree[Node] = {
+      val node = parentIf.fold(tree.value) { parent =>
+        val NonRootNode(
+          ClassDef(mods, className, tps, Template(parents, _, body)),
+          other,
+          acc
+        ) = tree.value
+
+        NonRootNode(
+          ClassDef(
+            mods,
+            className,
+            tps,
+            Template(
+              parents,
+              emptyValDef,
+              ValDef(
+                Modifiers(),
+                newTermName("parent"),
+                TypeTree(),
+                Apply(Select(New(Ident(parent.name)), nme.CONSTRUCTOR), Nil)
+              ) :: body
+            )
+          ),
+          other,
+          acc
+        )
+      }
+
+      util.Tree(
+        node,
+        tree.depth,
+        tree.children.map(assignParents(Some(node.classDef)))
+      )
+    }
+
+    val withParents = util.Tree(
+      tree.value,
+      tree.depth,
+      tree.children.map(assignParents(None))
+    )
+
+    c.Expr(
+      Block(
+        withParents.flatten.flatMap(_.defs),
+        instance(withParents.value)
+      )
     )
   }
 
-
-  def createLens[T: c.WeakTypeTag](c: Context)(lensTpe: c.universe.Type, name: String) = {
+  def createLens(c: Context)(
+    acc: c.universe.MethodSymbol,
+    source: c.universe.Type,
+    target: c.universe.Type
+  ) = {
     import c.universe._
 
-    def abort(reason: String) = c.abort(c.enclosingPosition, reason)
-    def mkParam(name: String, tpe: Type) =
-      ValDef(Modifiers(Flag.PARAM), newTermName(name), TypeTree(tpe), EmptyTree)
+      val target = acc.returnType
+      val anon = newTypeName(c.fresh)
+      val lens = newTermName(c.fresh)
+      val gx = newTermName(c.fresh)
+      val sx = newTermName(c.fresh)
+      val sv = newTermName(c.fresh)
 
-    import treeBuild._
-
-    val calledMember = lensTpe.member(newTermName(name)) orElse {
-      abort("value %s is not a member of %s".format(name, lensTpe))
-    }
-    val memberTpe = calledMember.typeSignatureIn(lensTpe) match {
-      case NullaryMethodType(tpe) => tpe
-      case _                      => abort("member %s is not a field".format(name))
-    }
-
-    val constructor =
-      DefDef(
+      val getter = DefDef(
         Modifiers(),
-        nme.CONSTRUCTOR,
-        List(),
-        List(List()),
+        newTermName("get"),
+        Nil,
+        List(
+          ValDef(Modifiers(Flag.PARAM), gx, TypeTree(source), EmptyTree) :: Nil
+        ),
         TypeTree(),
-        Block(
-          List(Apply(Select(Super(This(""), ""), nme.CONSTRUCTOR), Nil)),
-          Literal(Constant(()))))
-
-    val getF =
-      DefDef(
-        Modifiers(), newTermName("get"), List(),
-        List(List(mkParam("x$", lensTpe))),
-        TypeTree(),
-        Select(Ident(newTermName("x$")), newTermName(name))
+        Select(Ident(gx), acc.name)
       )
 
-    val setF =
-      DefDef(
-        Modifiers(), newTermName("set"), List(),
-        List(List(mkParam("x$", lensTpe), mkParam("v$", memberTpe))),
+      val setter = DefDef(
+        Modifiers(),
+        newTermName("set"),
+        Nil,
+        List(
+          ValDef(Modifiers(Flag.PARAM), sx, TypeTree(source), EmptyTree),
+          ValDef(Modifiers(Flag.PARAM), sv, TypeTree(target), EmptyTree)
+        ) :: Nil,
         TypeTree(),
         Apply(
-          Select(Ident(newTermName("x$")), newTermName("copy")),
-          List(AssignOrNamedArg(Ident(newTermName(name)), Ident(newTermName("v$"))))
+          Select(Ident(sx), "copy"),
+          AssignOrNamedArg(Ident(acc.name), Ident(sv)) :: Nil
         )
       )
 
-    Block(
-      List(
-        ClassDef(Modifiers(Flag.FINAL), newTypeName("$anon"), List(),
-          Template(List(
-            AppliedTypeTree(
-              Ident(c.mirror.staticClass("rillit.Lens")), List(TypeTree(lensTpe), TypeTree(memberTpe)))),
-            emptyValDef, List(
-              constructor,
-              getF,
-              setF
-            ))
-        )),
-      Apply(Select(New(Ident(newTypeName("$anon"))), nme.CONSTRUCTOR), List())
+      ClassDef(
+        Modifiers(Flag.FINAL),
+        anon,
+        Nil,
+        Template(
+          AppliedTypeTree(
+            Select(Ident("rillit"), newTypeName("Lens")),
+            List(TypeTree(source), TypeTree(target))
+          ) :: Nil,
+          emptyValDef,
+          List(constructor(c), getter, setter)
+        )
+      )
+    }
+
+  /** Convenience method for creating an empty constructor tree. */
+  def constructor(c: Context) = {
+    import c.universe._
+
+    DefDef(
+      Modifiers(),
+      nme.CONSTRUCTOR,
+      Nil,
+      Nil :: Nil,
+      TypeTree(),
+      Block(
+        Apply(
+          Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR),
+          Nil
+        ) :: Nil,
+        c.literalUnit.tree
+      )
     )
   }
 }
+
