@@ -12,6 +12,21 @@ Here is my [blog
 post](http://akisaarinen.fi/blog/2012/12/07/boilerplate-free-functional-lenses-for-scala/)
 explaining shortly what Rillit does.
 
+Installation
+============
+
+Rillit is published in a Maven repository if you want to try it out.
+However, please note that rillit is still very much an experimental project
+(*everything* may break, or not even work in the first place).
+
+Add the following to your SBT project to start experimenting with rillit:
+
+```
+resolvers += "rillit-repository" at "http://akisaarinen.github.com/rillit/maven"
+
+libraryDependencies += "fi.akisaarinen" %% "rillit" % "0.1.0"
+```
+
 Why?
 ====
 
