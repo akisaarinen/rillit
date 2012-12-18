@@ -80,14 +80,14 @@ object Lenser {
           anon,
           Nil,
           Template(
-            List(
-              if (depth == 1) AppliedTypeTree(
-                Select(lenser, newTypeName("TopLens")),
-                List(TypeTree(source), TypeTree(target))
-              ) else AppliedTypeTree(
-                Select(lenser, newTypeName("StackedLens")),
-                List(TypeTree(source), TypeTree(parent), TypeTree(target))
-              )
+            TypeTree(
+              if (depth == 1) appliedType(
+                typeOf[TopLens[_, _]].typeConstructor,
+                List(source, target)
+              ) else appliedType(
+                typeOf[StackedLens[_, _, _]].typeConstructor,
+                List(source, parent, target)
+              ) :: Nil
             ),
             emptyValDef,
             constructor(c) ::
@@ -212,10 +212,12 @@ object Lenser {
         anon,
         Nil,
         Template(
-          AppliedTypeTree(
-            Select(Ident("rillit"), newTypeName("Lens")),
-            List(TypeTree(source), TypeTree(target))
-          ) :: Nil,
+          TypeTree(
+            appliedType(
+              typeOf[Lens[_, _]].typeConstructor,
+              List(source, target)
+            )
+          ) :: Nil
           emptyValDef,
           List(constructor(c), getter, setter)
         )
