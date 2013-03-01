@@ -5,7 +5,7 @@ object build extends Build {
     val sharedSettings = Defaults.defaultSettings ++ Seq(
       organization := "fi.akisaarinen",
       version := "0.1.1-SNAPSHOT",
-      scalaVersion := "2.10.0-RC5",
+      scalaVersion := "2.10.0",
       //scalacOptions ++= Seq("-Xlog-free-terms", "-Ymacro-debug-lite"),
       libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
       libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
