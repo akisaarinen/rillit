@@ -9,7 +9,8 @@ The only changes are to the `Lenser` object, and the original examples will
 run without modification.
 
 This fork was developed by [Travis Brown](https://twitter.com/travisbrown)
-as a proof of concept.
+as a proof of concept, and was adapted by [Kevin Wright](https://twitter.com/thecoda)
+to use [`shapeless.Lens`](https://github.com/milessabin/shapeless/blob/master/core/src/main/scala/shapeless/lenses.scala).
 Aki Saarinen's original documentation for Rillit continues below.
 
 Rillit
@@ -87,7 +88,7 @@ creates a new functional lens for your `user` field, hence making its update an
 easy task:
 
 ```
-scala> Lenser[Person].contact.email.user.set(person, "john")
+scala> Lenser[Person].contact.email.user.set(person)("john")
 res1: Person = Person(Aki Saarinen,Contact(Email(john,akisaarinen.fi),http://akisaarinen.fi))
 ```
 
@@ -151,7 +152,7 @@ object Main {
   // The traditional way of doing this without lenses is this:
   //   val updated = person.copy(contact = person.contact.copy(email = something))
   def setterExample() {
-    val updated = Lenser[Person].contact.email.set(person, Email("foo", "foobar.com"))
+    val updated = Lenser[Person].contact.email.set(person)(Email("foo", "foobar.com"))
 
     println("Setter example:")
     println("  Original person: %s".format(person))  // email = 'aki@akisaarinen.fi'
@@ -166,11 +167,11 @@ object Main {
     val user  = Lenser[Email].user
     val email = Lenser[Person].contact.email
 
-    val lens = email andThen user
+    val lens = user compose email
 
     println("Composed lens example:")
     println("  Getter: %s".format(lens.get(person)))         // 'aki'
-    println("  Setter: %s".format(lens.set(person, "john"))) // email = 'john@akisaarinen.fi'
+    println("  Setter: %s".format(lens.set(person)("john"))) // email = 'john@akisaarinen.fi'
   }
 
   case class Person(name: Name,  contact: Contact)
