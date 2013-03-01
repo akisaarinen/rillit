@@ -23,7 +23,7 @@ object Main {
   // The traditional way of doing this without lenses is this:
   //   val updated = person.copy(contact = person.contact.copy(email = something))
   def setterExample() {
-    val updated = Lenser[Person].contact.email.set(person, Email("foo", "foobar.com"))
+    val updated = Lenser[Person].contact.email.set(person)(Email("foo", "foobar.com"))
 
     println("Setter example:")
     println("  Original person: %s".format(person))  // email = 'aki@akisaarinen.fi'
@@ -38,11 +38,11 @@ object Main {
     val user  = Lenser[Email].user
     val email = Lenser[Person].contact.email
 
-    val lens = email andThen user
+    val lens = user compose email
 
     println("Composed lens example:")
     println("  Getter: %s".format(lens.get(person)))         // 'aki'
-    println("  Setter: %s".format(lens.set(person, "john"))) // email = 'john@akisaarinen.fi'
+    println("  Setter: %s".format(lens.set(person)("john"))) // email = 'john@akisaarinen.fi'
   }
 
   case class Person(name: Name,  contact: Contact)
