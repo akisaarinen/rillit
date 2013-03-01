@@ -87,8 +87,8 @@ object Lenser {
               ) else appliedType(
                 typeOf[StackedLens[_, _, _]].typeConstructor,
                 List(source, parent, target)
-              ) :: Nil
-            ),
+              )
+            ) :: Nil,
             emptyValDef,
             constructor(c) ::
             ValDef(
@@ -217,7 +217,7 @@ object Lenser {
               typeOf[Lens[_, _]].typeConstructor,
               List(source, target)
             )
-          ) :: Nil
+          ) :: Nil,
           emptyValDef,
           List(constructor(c), getter, setter)
         )
