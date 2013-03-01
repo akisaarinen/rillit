@@ -39,7 +39,7 @@ Add the following to your SBT project to start experimenting with rillit:
 ```
 resolvers += "rillit-repository" at "http://akisaarinen.github.com/rillit/maven"
 
-libraryDependencies += "fi.akisaarinen" %% "rillit" % "0.1.0"
+libraryDependencies += "fi.akisaarinen" %% "rillit-nodynamic" % "0.2.0"
 ```
 
 Why?
