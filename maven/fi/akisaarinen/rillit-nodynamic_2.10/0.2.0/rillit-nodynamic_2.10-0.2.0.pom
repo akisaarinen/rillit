@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>fi.akisaarinen</groupId>
+    <artifactId>rillit-nodynamic_2.10</artifactId>
+    <packaging>jar</packaging>
+    <description>rillit-nodynamic</description>
+    <version>0.2.0</version>
+    <name>rillit-nodynamic</name>
+    <organization>
+        <name>fi.akisaarinen</name>
+    </organization>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.10.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-compiler</artifactId>
+            <version>2.10.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>2.10.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.chuusai</groupId>
+            <artifactId>shapeless_2.10</artifactId>
+            <version>1.2.3</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+</project>
