@@ -2,6 +2,7 @@ package rillit
 
 import scala.language.experimental.macros
 import scala.reflect.macros.Context
+import shapeless.Lens
 
 object Lenser {
   trait StackedLens[A, B, C] extends Lens[A, C] {
@@ -9,7 +10,7 @@ object Lenser {
     protected def local: Lens[B, C]
     protected def lens = local compose parent
     def get(x: A) = lens.get(x)
-    def set(x: A, v: C) = lens.set(x, v)
+    def set(x: A)(v: C) = lens.set(x)(v)
   }
 
   trait TopLens[A, B] extends StackedLens[A, A, B] {
@@ -87,8 +88,8 @@ object Lenser {
               ) else appliedType(
                 typeOf[StackedLens[_, _, _]].typeConstructor,
                 List(source, parent, target)
-              ) :: Nil
-            ),
+              )
+            ) :: Nil,
             emptyValDef,
             constructor(c) ::
             ValDef(
@@ -197,9 +198,9 @@ object Lenser {
         newTermName("set"),
         Nil,
         List(
-          ValDef(Modifiers(Flag.PARAM), sx, TypeTree(source), EmptyTree),
-          ValDef(Modifiers(Flag.PARAM), sv, TypeTree(target), EmptyTree)
-        ) :: Nil,
+          List( ValDef(Modifiers(Flag.PARAM), sx, TypeTree(source), EmptyTree) ),
+          List( ValDef(Modifiers(Flag.PARAM), sv, TypeTree(target), EmptyTree) )
+        ),
         TypeTree(),
         Apply(
           Select(Ident(sx), "copy"),
@@ -217,7 +218,7 @@ object Lenser {
               typeOf[Lens[_, _]].typeConstructor,
               List(source, target)
             )
-          ) :: Nil
+          ) :: Nil,
           emptyValDef,
           List(constructor(c), getter, setter)
         )
