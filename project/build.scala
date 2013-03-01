@@ -13,7 +13,7 @@ object build extends Build {
     )
 
     lazy val core = Project(
-        id = "rillit",
+        id = "rillit-nodynamic",
         base = file("core"),
         settings = sharedSettings ++ Seq(
           publishTo := Some(Resolver.file("file", new File("../rillit-gh-pages/maven")))
